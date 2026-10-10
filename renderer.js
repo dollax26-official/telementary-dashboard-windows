@@ -188,7 +188,7 @@ function computeAgg() {
 
   /* devices first (so devices without telemetry still appear) */
   for (const d of state.devices) {
-    const id = d.deviceId || d.id;
+    const id = d.uuid || (d.username ? "name:" + d.username.trim().toLowerCase() : "") || d.deviceId || d.id;
     if (!id) continue;
     const p = ensure(id, d.username);
     if (d.username && (!p.name || p.name === id)) p.name = d.username;
@@ -204,7 +204,7 @@ function computeAgg() {
 
   for (const r of state.records) {
     const payload = (r && r.payload) || {};
-    const rid = r.deviceId || payload.uuid || payload.player || "unknown";
+    const rid = payload.uuid || (payload.player ? "name:" + String(payload.player).trim().toLowerCase() : "") || (r.username ? "name:" + String(r.username).trim().toLowerCase() : "") || r.deviceId || "unknown";
     const p = ensure(rid, payload.player || r.username);
 
     if (payload.player && (!p.name || p.name === rid)) p.name = payload.player;
