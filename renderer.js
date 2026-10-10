@@ -193,6 +193,7 @@ function computeAgg() {
     const p = ensure(id, d.username);
     if (d.username && (!p.name || p.name === id)) p.name = d.username;
     p.device = d;
+    if (d.uuid) p.uuid = d.uuid;
     if (d.minecraftVersion) p.version = d.minecraftVersion;
     p.lastSeenMs = Math.max(p.lastSeenMs, ts(d.lastSeenAt));
   }
