@@ -7,7 +7,7 @@ in **Sessions** and a **Commands ⇄ Chat logs** switch in **Commands**.
 ## Run it
 
 ```powershell
-cd C:\Users\mohsen\Desktop\FernDashboard
+cd C:\Users\%USER%\Desktop\FernDashboard
 npm start
 ```
 
