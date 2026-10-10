@@ -151,3 +151,42 @@ app.whenReady().then(createWindow);
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
+
+
+/* Authenticated single-player world backup downloads. */
+ipcMain.handle("data:worldBackups", async () => {
+  const data = await api("/api/worlds");
+  return { ok: true, worlds: Array.isArray(data.worlds) ? data.worlds : [] };
+});
+
+ipcMain.handle("data:downloadWorldBackup", async (_, payload) => {
+  const id = String(payload && payload.id || "");
+  if (!/^[0-9a-f-]{36}$/i.test(id)) throw new Error("Invalid world backup ID.");
+  if (!masterToken) throw new Error("Master token is not set.");
+
+  const response = await fetch(apiBase + "/api/worlds/" + encodeURIComponent(id) + "/download", {
+    headers: { Authorization: `Bearer ${masterToken}` }
+  });
+  if (!response.ok) {
+    let message = `HTTP ${response.status}`;
+    try { const data = await response.json(); message = data.error || message; } catch {}
+    throw new Error(message);
+  }
+
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.length < 4 || bytes[0] !== 0x50 || bytes[1] !== 0x4b) {
+    throw new Error("The server did not return a valid ZIP archive.");
+  }
+
+  const safe = (v) => String(v || "world").replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 50) || "world";
+  const filename = `fern-world-${safe(payload && payload.player)}-${safe(payload && payload.worldName)}.zip`;
+  const win = BrowserWindow.getFocusedWindow() || mainWindow;
+  const { canceled, filePath } = await dialog.showSaveDialog(win, {
+    title: "Save Minecraft world backup",
+    defaultPath: path.join(app.getPath("downloads"), filename),
+    filters: [{ name: "Minecraft world ZIP", extensions: ["zip"] }]
+  });
+  if (canceled || !filePath) return { ok: false, canceled: true };
+  fs.writeFileSync(filePath, bytes);
+  return { ok: true, path: filePath, bytes: bytes.length };
+});

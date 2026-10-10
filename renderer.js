@@ -128,6 +128,8 @@ const state = {
   devices: [],
   records: [],
   totalRecords: 0,
+  worldBackups: [],
+  worldBackupsError: "",
   lastUpdated: 0,
   loading: false,
   connected: false,
@@ -186,11 +188,12 @@ function computeAgg() {
 
   /* devices first (so devices without telemetry still appear) */
   for (const d of state.devices) {
-    const id = d.deviceId || d.id;
+    const id = d.uuid || (d.username ? "name:" + d.username.trim().toLowerCase() : "") || d.deviceId || d.id;
     if (!id) continue;
     const p = ensure(id, d.username);
     if (d.username && (!p.name || p.name === id)) p.name = d.username;
     p.device = d;
+    if (d.uuid) p.uuid = d.uuid;
     if (d.minecraftVersion) p.version = d.minecraftVersion;
     p.lastSeenMs = Math.max(p.lastSeenMs, ts(d.lastSeenAt));
   }
@@ -202,7 +205,7 @@ function computeAgg() {
 
   for (const r of state.records) {
     const payload = (r && r.payload) || {};
-    const rid = r.deviceId || payload.uuid || payload.player || "unknown";
+    const rid = payload.uuid || (payload.player ? "name:" + String(payload.player).trim().toLowerCase() : "") || (r.username ? "name:" + String(r.username).trim().toLowerCase() : "") || r.deviceId || "unknown";
     const p = ensure(rid, payload.player || r.username);
 
     if (payload.player && (!p.name || p.name === rid)) p.name = payload.player;
@@ -701,6 +704,50 @@ function renderWorlds() {
   if (sel && sel.value !== f.player) sel.value = f.player;
 }
 
+
+/* Real archive backups stored by the Railway API, separate from world summaries. */
+function renderWorldBackups() {
+  const host = $("world-backups-list");
+  if (!host) return;
+  if (state.worldBackupsError) {
+    host.innerHTML = emptyState(I.warn, "Could not load world backups", state.worldBackupsError);
+    return;
+  }
+  if (!state.worldBackups.length) {
+    host.innerHTML = emptyState(I.inbox, "No uploaded world backups", "Backups appear only after a player explicitly enables world backup upload in the mod.");
+    return;
+  }
+  host.innerHTML = state.worldBackups.map((w) => `
+    <div class="world-row">
+      <span class="world-ico">${I.download}</span>
+      <div class="world-main">
+        <div class="world-name">${esc(w.worldName || "Minecraft World")}</div>
+        <div class="world-sub">${avatar(w.player || "unknown", "xs")}<span>${esc(w.player || "unknown")} · uploaded ${esc(fmtDate(w.uploadedAt))} · ${esc(((Number(w.sizeBytes)||0)/1048576).toFixed(1))} MB</span></div>
+      </div>
+      <button class="btn primary compact" data-download-world="${esc(w.id)}" data-world-player="${esc(w.player || "player")}" data-world-name="${esc(w.worldName || "world")}">${I.download}<span>Download ZIP</span></button>
+    </div>`).join("");
+}
+async function loadWorldBackups() {
+  const host = $("world-backups-list");
+  if (!host || !window.fern || typeof window.fern.getWorldBackups !== "function") return;
+  state.worldBackupsError = "";
+  try {
+    const result = await window.fern.getWorldBackups();
+    state.worldBackups = Array.isArray(result && result.worlds) ? result.worlds : [];
+  } catch (e) {
+    state.worldBackupsError = cleanErr(e);
+  }
+  renderWorldBackups();
+}
+async function downloadWorldBackup(id, player, worldName) {
+  try {
+    const result = await window.fern.downloadWorldBackup({ id, player, worldName });
+    if (result && result.ok) toast("World backup saved to " + result.path, "ok");
+    else if (!(result && result.canceled)) toast("World backup download failed", "error");
+  } catch (e) {
+    toast("World backup download failed: " + cleanErr(e), "error");
+  }
+}
 async function downloadWorlds() {
   const rows = worldsFiltered();
   if (!rows.length) { toast("Nothing to download — no worlds in the current view", "error"); return; }
@@ -869,6 +916,10 @@ document.addEventListener("click", (e) => {
   if (e.target.closest("#retry-btn")) { load(); return; }
 
   if (e.target.closest("#worlds-download")) { downloadWorlds(); return; }
+
+  const worldDownload = e.target.closest("[data-download-world]");
+  if (worldDownload) { downloadWorldBackup(worldDownload.dataset.downloadWorld, worldDownload.dataset.worldPlayer, worldDownload.dataset.worldName); return; }
+  if (e.target.closest("#world-backups-refresh")) { loadWorldBackups(); return; }
 
   const goto = e.target.closest("[data-goto-player]");
   if (goto) {

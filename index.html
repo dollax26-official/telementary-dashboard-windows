@@ -201,23 +201,28 @@
         <div class="panel"><div id="commands-list" class="list"></div></div>
       </section>
 
-      <!-- Worlds -->
+      <!-- Real world ZIP backups uploaded with explicit player consent -->
       <section id="view-worlds" class="view hidden">
         <div class="toolbar">
-          <label class="select-wrap" title="Filter worlds by player">
-            <select id="worlds-player"><option value="">All players</option></select>
-          </label>
           <div class="search-wrap grow">
-            <span class="input-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.4"></circle><path d="M15.6 15.6 19.6 19.6"></path></svg></span>
-            <input id="worlds-search" placeholder="Search worlds&hellip;" spellcheck="false">
+            <span class="input-ico">${""}</span>
+            <input id="worlds-search" placeholder="Search worlds…" spellcheck="false">
           </div>
-          <button id="worlds-download" class="btn primary compact" title="Download the worlds shown here as JSON">
-            <svg class="ico ico-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10.5"></path><path d="m7.5 10.4 4.5 4.6 4.5-4.6"></path><path d="M4.5 19.5h15"></path></svg>
-            <span>Download JSON</span>
-          </button>
-          <span class="result-count" id="worlds-count"></span>
+          <button id="world-backups-refresh" class="btn primary compact">Refresh backups</button>
         </div>
-        <div class="panel"><div id="worlds-list" class="list"></div></div>
+        <div class="panel">
+          <div class="panel-head"><h3>World backups</h3><span class="panel-sub">Actual ZIP archives on Railway</span></div>
+          <div id="world-backups-list" class="list"></div>
+        </div>
+        <div class="panel" style="margin-top:16px">
+          <div class="panel-head"><h3>World activity</h3><span class="panel-sub">Telemetry summaries</span></div>
+          <div class="toolbar">
+            <label class="select-wrap" title="Filter worlds by player"><select id="worlds-player"><option value="">All players</option></select></label>
+            <button id="worlds-download" class="btn compact" title="Export world summaries as JSON">Download JSON summary</button>
+            <span class="result-count" id="worlds-count"></span>
+          </div>
+          <div id="worlds-list" class="list"></div>
+        </div>
       </section>
     </main>
   </div>
