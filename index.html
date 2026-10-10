@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self';">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fern Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ============================ Login ============================ -->
+  <div id="login" class="login-screen">
+    <div class="glow glow-a"></div>
+    <div class="glow glow-b"></div>
+
+    <form id="login-form" class="login-card" autocomplete="off">
+      <div class="brand brand-lg">
+        <span class="logo">
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="9" fill="rgba(139,92,246,.16)"></rect>
+            <path d="M16 25.2V13.4" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round"></path>
+            <path d="M15.8 14.2C11.2 14.9 8 12.7 8 7.7c4.8-.7 7.9 1.5 7.8 6.5Z" fill="#8b5cf6"></path>
+            <path d="M16.2 12.5c0-4.3 2.9-6.5 7.9-6.3 0 4.9-3 7-7.9 6.3Z" fill="#a78bfa"></path>
+          </svg>
+        </span>
+        <div class="brand-text"><b>FERN</b><small>TELEMETRY DASHBOARD</small></div>
+      </div>
+
+      <h1>Connect to your telemetry</h1>
+      <p class="lead">Point the dashboard at your Fern telemetry service (the Railway data storer) and enter your master token. Both stay in this app session only and are never sent anywhere except that server.</p>
+
+      <label class="field" for="server-url">
+        <span class="field-label">Telemetry server URL</span>
+        <span class="input-wrap">
+          <span class="input-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.6" y="4.4" width="16.8" height="6.4" rx="2"></rect><rect x="3.6" y="13.2" width="16.8" height="6.4" rx="2"></rect><path d="M7 7.6h.01"></path><path d="M7 16.4h.01"></path></svg>
+          </span>
+          <input id="server-url" type="text" placeholder="https://your-app.up.railway.app" value="https://telementary-production.up.railway.app" spellcheck="false">
+        </span>
+      </label>
+
+      <label class="field" for="token">
+        <span class="field-label">Master token</span>
+        <span class="input-wrap">
+          <span class="input-ico">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4.6" y="10.4" width="14.8" height="9.2" rx="2.4"></rect><path d="M8.2 10.2V7.8a3.8 3.8 0 0 1 7.6 0v2.4"></path></svg>
+          </span>
+          <input id="token" type="password" placeholder="Railway master token" autocomplete="off" spellcheck="false">
+        </span>
+      </label>
+
+      <button id="connect" class="btn primary" type="submit">
+        <span class="btn-label">Connect</span>
+      </button>
+      <div id="login-error" class="form-error" role="alert"></div>
+    </form>
+  </div>
+
+  <!-- ============================= App ============================= -->
+  <div id="app" class="app hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="logo">
+          <svg viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="9" fill="rgba(139,92,246,.16)"></rect>
+            <path d="M16 25.2V13.4" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round"></path>
+            <path d="M15.8 14.2C11.2 14.9 8 12.7 8 7.7c4.8-.7 7.9 1.5 7.8 6.5Z" fill="#8b5cf6"></path>
+            <path d="M16.2 12.5c0-4.3 2.9-6.5 7.9-6.3 0 4.9-3 7-7.9 6.3Z" fill="#a78bfa"></path>
+          </svg>
+        </span>
+        <div class="brand-text"><b>FERN</b><small>TELEMETRY</small></div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-view="overview">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7.2" height="7.2" rx="2"></rect><rect x="13.3" y="3.5" width="7.2" height="7.2" rx="2"></rect><rect x="3.5" y="13.3" width="7.2" height="7.2" rx="2"></rect><rect x="13.3" y="13.3" width="7.2" height="7.2" rx="2"></rect></svg>
+          <span>Overview</span>
+        </button>
+        <button class="nav-item" data-view="players">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9.2" cy="8.2" r="3.4"></circle><path d="M3.6 19.4c.7-3.1 2.9-5 5.6-5s4.9 1.9 5.6 5"></path><path d="M16.2 5.4a3.1 3.1 0 0 1 0 5.9"></path><path d="M17.7 14.7c2 .6 3.3 2.2 3.8 4.7"></path></svg>
+          <span>Players</span><em class="nav-count" id="nc-players"></em>
+        </button>
+        <button class="nav-item" data-view="sessions">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.3"></circle><path d="M12 7.4V12l3.1 1.9"></path></svg>
+          <span>Sessions</span><em class="nav-count" id="nc-sessions"></em>
+        </button>
+        <button class="nav-item" data-view="commands">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.4" y="4.6" width="17.2" height="14.8" rx="3"></rect><path d="M7.3 9.6l2.9 2.5-2.9 2.5"></path><path d="M12.7 14.6h4.1"></path></svg>
+          <span>Commands</span><em class="nav-count" id="nc-commands"></em>
+        </button>
+        <button class="nav-item" data-view="worlds">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.3"></circle><path d="M3.7 12h16.6"></path><path d="M12 3.7c2.4 2.2 3.6 5 3.6 8.3 0 3.3-1.2 6.1-3.6 8.3-2.4-2.2-3.6-5-3.6-8.3 0-3.3 1.2-6.1 3.6-8.3Z"></path></svg>
+          <span>Worlds</span><em class="nav-count" id="nc-worlds"></em>
+        </button>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="conn"><span class="conn-dot" id="conn-dot"></span><div class="conn-txt"><span id="conn-text">Connected</span><span class="conn-sub" id="conn-server"></span></div></div>
+        <button id="refresh" class="side-btn">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.9 12a8.1 8.1 0 0 1 13.9-5.7l2.3 2.2"></path><path d="M20.1 4.6v3.9h-3.9"></path><path d="M20.1 12a8.1 8.1 0 0 1-13.9 5.7l-2.3-2.2"></path><path d="M3.9 19.4v-3.9h3.9"></path></svg>
+          <span>Refresh data</span>
+        </button>
+        <button id="disconnect" class="side-btn danger">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.8v7.4"></path><path d="M8.4 6.4a7.2 7.2 0 1 0 7.2 0"></path></svg>
+          <span>Disconnect</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">TELEMETRY CONTROL CENTER</div>
+          <h1 id="page-title">Overview</h1>
+        </div>
+        <div class="topbar-actions">
+          <span id="last-updated" class="chip"><span class="chip-dot"></span>Not loaded</span>
+          <button id="refresh-top" class="icon-btn" title="Refresh" aria-label="Refresh">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.9 12a8.1 8.1 0 0 1 13.9-5.7l2.3 2.2"></path><path d="M20.1 4.6v3.9h-3.9"></path><path d="M20.1 12a8.1 8.1 0 0 1-13.9 5.7l-2.3-2.2"></path><path d="M3.9 19.4v-3.9h3.9"></path></svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Overview -->
+      <section id="view-overview" class="view">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9.2" cy="8.2" r="3.4"></circle><path d="M3.6 19.4c.7-3.1 2.9-5 5.6-5s4.9 1.9 5.6 5"></path><path d="M16.2 5.4a3.1 3.1 0 0 1 0 5.9"></path><path d="M17.7 14.7c2 .6 3.3 2.2 3.8 4.7"></path></svg></div>
+            <div class="stat-body"><span class="stat-label">PLAYERS</span><strong id="stat-players">&ndash;</strong><small id="stat-players-sub">registered devices</small></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.3"></circle><path d="M12 7.4V12l3.1 1.9"></path></svg></div>
+            <div class="stat-body"><span class="stat-label">SESSIONS</span><strong id="stat-sessions">&ndash;</strong><small>recorded sessions</small></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.4" y="4.6" width="17.2" height="14.8" rx="3"></rect><path d="M7.3 9.6l2.9 2.5-2.9 2.5"></path><path d="M12.7 14.6h4.1"></path></svg></div>
+            <div class="stat-body"><span class="stat-label">COMMANDS</span><strong id="stat-commands">&ndash;</strong><small>recorded commands</small></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.2 7a2.8 2.8 0 0 1 2.8-2.8h10a2.8 2.8 0 0 1 2.8 2.8v6.4a2.8 2.8 0 0 1-2.8 2.8H9.1l-3.5 3a.55.55 0 0 1-.9-.43Z"></path></svg></div>
+            <div class="stat-body"><span class="stat-label">CHAT LOGS</span><strong id="stat-chats">&ndash;</strong><small>recorded messages</small></div>
+          </div>
+        </div>
+
+        <div class="cols">
+          <div class="panel">
+            <div class="panel-head"><h3>Recent activity</h3><span class="panel-sub">Latest sessions</span></div>
+            <div id="recent" class="list"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Top players</h3><span class="panel-sub">By commands</span></div>
+            <div id="top-players" class="list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Players -->
+      <section id="view-players" class="view hidden">
+        <div class="toolbar">
+          <div class="search-wrap grow">
+            <span class="input-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.4"></circle><path d="M15.6 15.6 19.6 19.6"></path></svg></span>
+            <input id="player-search" placeholder="Search players, UUIDs or device IDs&hellip;" spellcheck="false">
+          </div>
+          <span class="result-count" id="players-count"></span>
+        </div>
+        <div id="players-list" class="player-grid"></div>
+      </section>
+
+      <!-- Sessions -->
+      <section id="view-sessions" class="view hidden">
+        <div class="toolbar">
+          <label class="select-wrap" title="Filter sessions by player">
+            <select id="session-player"><option value="">All players</option></select>
+          </label>
+          <div class="search-wrap grow">
+            <span class="input-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.4"></circle><path d="M15.6 15.6 19.6 19.6"></path></svg></span>
+            <input id="session-search" placeholder="Search by server&hellip;" spellcheck="false">
+          </div>
+          <span class="result-count" id="sessions-count"></span>
+        </div>
+        <div class="panel"><div id="sessions-list" class="list"></div></div>
+      </section>
+
+      <!-- Commands -->
+      <section id="view-commands" class="view hidden">
+        <div class="toolbar">
+          <label class="select-wrap" title="Filter by player">
+            <select id="command-player"><option value="">All players</option></select>
+          </label>
+          <div class="segmented" id="command-type" role="tablist" aria-label="Data type">
+            <button class="seg active" data-type="commands" role="tab" aria-selected="true">Commands <em id="seg-count-commands">0</em></button>
+            <button class="seg" data-type="chats" role="tab" aria-selected="false">Chat logs <em id="seg-count-chats">0</em></button>
+          </div>
+          <div class="search-wrap grow">
+            <span class="input-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.4"></circle><path d="M15.6 15.6 19.6 19.6"></path></svg></span>
+            <input id="command-search" placeholder="Filter commands&hellip;" spellcheck="false">
+          </div>
+          <span class="result-count" id="commands-count"></span>
+        </div>
+        <div class="panel"><div id="commands-list" class="list"></div></div>
+      </section>
+
+      <!-- Worlds -->
+      <section id="view-worlds" class="view hidden">
+        <div class="toolbar">
+          <label class="select-wrap" title="Filter worlds by player">
+            <select id="worlds-player"><option value="">All players</option></select>
+          </label>
+          <div class="search-wrap grow">
+            <span class="input-ico"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.4"></circle><path d="M15.6 15.6 19.6 19.6"></path></svg></span>
+            <input id="worlds-search" placeholder="Search worlds&hellip;" spellcheck="false">
+          </div>
+          <button id="worlds-download" class="btn primary compact" title="Download the worlds shown here as JSON">
+            <svg class="ico ico-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10.5"></path><path d="m7.5 10.4 4.5 4.6 4.5-4.6"></path><path d="M4.5 19.5h15"></path></svg>
+            <span>Download JSON</span>
+          </button>
+          <span class="result-count" id="worlds-count"></span>
+        </div>
+        <div class="panel"><div id="worlds-list" class="list"></div></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast-wrap"></div>
+  <script src="renderer.js"></script>
+</body>
+</html>
